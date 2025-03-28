@@ -1,0 +1,236 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 36 33% 97%;
+    --foreground: 20 28% 12%;
+
+    --card: 36 33% 97%;
+    --card-foreground: 20 28% 12%;
+
+    --popover: 36 33% 97%;
+    --popover-foreground: 20 28% 12%;
+
+    --primary: 32 59% 57%;
+    --primary-foreground: 36 33% 97%;
+
+    --secondary: 24 22% 21%;
+    --secondary-foreground: 36 33% 97%;
+
+    --muted: 30 20% 90%;
+    --muted-foreground: 20 15% 40%;
+
+    --accent: 32 59% 57%;
+    --accent-foreground: 36 33% 97%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 36 33% 97%;
+
+    --border: 30 20% 87%;
+    --input: 30 20% 87%;
+    --ring: 32 59% 57%;
+
+    --radius: 0.75rem;
+    
+    --sidebar-background: 36 33% 97%;
+    --sidebar-foreground: 20 28% 12%;
+    --sidebar-primary: 32 59% 57%;
+    --sidebar-primary-foreground: 36 33% 97%;
+    --sidebar-accent: 30 20% 90%;
+    --sidebar-accent-foreground: 20 28% 12%;
+    --sidebar-border: 30 20% 87%;
+    --sidebar-ring: 32 59% 57%;
+  }
+
+  .dark {
+    --background: 20 14.3% 4.1%;
+    --foreground: 60 9.1% 97.8%;
+    --card: 20 14.3% 4.1%;
+    --card-foreground: 60 9.1% 97.8%;
+    --popover: 20 14.3% 4.1%;
+    --popover-foreground: 60 9.1% 97.8%;
+    --primary: 20.5 90.2% 48.2%;
+    --primary-foreground: 60 9.1% 97.8%;
+    --secondary: 12 6.5% 15.1%;
+    --secondary-foreground: 60 9.1% 97.8%;
+    --muted: 12 6.5% 15.1%;
+    --muted-foreground: 24 5.4% 63.9%;
+    --accent: 12 6.5% 15.1%;
+    --accent-foreground: 60 9.1% 97.8%;
+    --destructive: 0 72.2% 50.6%;
+    --destructive-foreground: 60 9.1% 97.8%;
+    --border: 12 6.5% 15.1%;
+    --input: 12 6.5% 15.1%;
+    --ring: 20.5 90.2% 48.2%;
+
+    --sidebar-background: 12 6.5% 15.1%;
+    --sidebar-foreground: 60 9.1% 97.8%;
+    --sidebar-primary: 20.5 90.2% 48.2%;
+    --sidebar-primary-foreground: 60 9.1% 97.8%;
+    --sidebar-accent: 12 6.5% 15.1%;
+    --sidebar-accent-foreground: 60 9.1% 97.8%;
+    --sidebar-border: 12 6.5% 15.1%;
+    --sidebar-ring: 20.5 90.2% 48.2%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-brewery;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-lg;
+  }
+
+  .beer-bubble {
+    @apply absolute rounded-full bg-white/80 animate-bubble-rise;
+  }
+
+  .beer-container {
+    @apply relative w-full h-40 bg-brewery-dark/10 rounded-b-lg overflow-hidden;
+  }
+
+  .beer-liquid {
+    @apply absolute bottom-0 left-0 right-0 bg-brewery-gold animate-pour;
+  }
+
+  .beer-foam {
+    @apply absolute top-0 left-0 right-0 bg-white/90 rounded-t-lg animate-foam-appear;
+  }
+
+  .section-padding {
+    @apply py-12 px-4 sm:py-16 sm:px-6 md:py-20 md:px-8 lg:py-24 lg:px-12;
+  }
+
+  .nav-link {
+    @apply text-brewery-dark/80 hover:text-brewery-amber transition-colors duration-300 font-medium;
+  }
+
+  .nav-link.active {
+    @apply text-brewery-amber;
+  }
+
+  .btn-primary {
+    @apply px-4 py-2 sm:px-6 sm:py-3 bg-brewery-amber text-white font-semibold rounded-md shadow-md hover:bg-brewery-amber/90 transition-all duration-300 text-center;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 sm:px-6 sm:py-3 bg-brewery-dark text-white font-semibold rounded-md shadow-md hover:bg-brewery-dark/90 transition-all duration-300 text-center;
+  }
+
+  .btn-outline {
+    @apply px-4 py-2 sm:px-6 sm:py-3 border-2 border-brewery-amber text-brewery-amber font-semibold rounded-md hover:bg-brewery-amber/10 transition-all duration-300 text-center;
+  }
+
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
+  }
+  
+  .responsive-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6;
+  }
+  
+  .responsive-grid-tight {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4;
+  }
+  
+  .responsive-container {
+    @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  .content-card {
+    @apply bg-white rounded-lg shadow-md p-4 sm:p-6;
+  }
+}
+
+/* Logo animation */
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+
+.logo:hover {
+  filter: drop-shadow(0 0 2em #d4a14baa);
+}
+
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+/* Scroll behavior */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-brewery-cream;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-brewery-brown/50 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-brewery-brown/80;
+}
+
+/* Mobile-first responsive adjustments */
+@layer utilities {
+  @keyframes progress {
+    0% { width: 0%; }
+    100% { width: 100%; }
+  }
+  
+  .touch-scrolling {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+}
+
+/* Add meta tag for proper viewport handling */
+@media screen and (max-width: 768px) {
+  html, body {
+    @apply overflow-x-hidden;
+  }
+}
