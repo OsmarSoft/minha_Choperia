@@ -115,6 +115,7 @@ def login(request):
     if user is not None:
         # Gerar o token JWT
         refresh = RefreshToken.for_user(user)
+        print("Token gerado:", str(refresh.access_token))  # Adicione este log
         usuario = Usuario.objects.get(user=user)
         serializer = UsuarioSerializer(usuario)
         return Response({
@@ -123,8 +124,7 @@ def login(request):
             'user': serializer.data
         }, status=status.HTTP_200_OK)
     return Response({"detail": "Credenciais inválidas"}, status=status.HTTP_401_UNAUTHORIZED)
-
-
+    
 
 
 

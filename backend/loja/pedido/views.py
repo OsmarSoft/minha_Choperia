@@ -11,15 +11,23 @@ from produto.models import Produto
 from empresa.models import Empresa
 from django.contrib.auth.models import User
 from django.db.models import Q
+import logging
+
+logger = logging.getLogger(__name__)
 
 @api_view(['GET'])
 def search_pedidos(request):
-    query = request.query_params.get("search")
+    query = request.query_params.get("search", "")
+    logger.info(f"Query recebida: {query}")
     pedidos = Pedido.objects.filter(
-        Q(nome__icontains=query)
+        Q(itens__produto__nome__icontains=query) | # busca pelo nome do produto nos itens do pedido
+        Q(usuario__username__icontains=query) | # busca pelo nome de usuário
+        Q(status__icontains=query) | # busca pelo status do pedido
+        Q(origem__icontains=query) # busca pela origem do pedido
     )
+    logger.info(f"Pedidos encontrados: {pedidos.count()}")
     serializer = PedidoSerializer(pedidos, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK) 
+    return Response(serializer.data, status=status.HTTP_200_OK)
        
 @api_view(['GET', 'POST'])
 def pedidos(request):

@@ -23,6 +23,20 @@ const removeToken = () => {
   localStorage.removeItem('auth_token');
 };
 
+//  interceptor no Axios para lidar com erros 401 Unauthorized
+/*
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      removeToken(); // Remove o token inválido
+      window.location.href = '/login'; // Redireciona para a página de login
+    }
+    return Promise.reject(error);
+  }
+);
+*/
+
 // Add token to request headers
 api.interceptors.request.use((config) => {
   const token = getToken();
