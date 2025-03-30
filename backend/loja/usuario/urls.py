@@ -7,4 +7,7 @@ urlpatterns = [
     path("usuarios/<slug:slug>/", views.usuario_detail, name="usuario-detail"),
     path("usuarios-search/", views.search_usuarios, name='usuarios-search'),
     path("login/", views.login, name='login'),  # Updated to match frontend url
+    path("logout/", views.logout, name='logout'),
+    path("get-user-token/", views.get_user_token, name='get-user-token'),
 ]
+

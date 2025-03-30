@@ -124,3 +124,7 @@ export const deletarCarrinho = async (slug: string): Promise<any> => {
     throw error;
   }
 };
+
+
+
+

@@ -3,12 +3,13 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework import status
-from .models import Usuario
+from .models import Usuario, UserToken
 from .serializers import UsuarioSerializer
 from django.db.models import Q
 from django.contrib.auth import authenticate, login
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import User
+import uuid
 
 @api_view(['POST'])
 def user_login(request):
@@ -103,28 +104,88 @@ def usuario_detail(request, slug):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 @api_view(['POST'])
-@permission_classes([AllowAny])  # Permitir acesso não autenticado
+@permission_classes([AllowAny])
 def login(request):
-    print("Estou em Login")  # Debugging line
+    print("Estou em Login")
     email = request.data.get('email')
     password = request.data.get('password')
-    print("Login request data em login:", request.data)
+    print("Login request data:", request.data)
     print("Email:", email)
     print("Password:", password)
     user = authenticate(request, username=email, password=password)
+    print("User autenticado:", user)
+    
     if user is not None:
         # Gerar o token JWT
         refresh = RefreshToken.for_user(user)
-        print("Token gerado:", str(refresh.access_token))  # Adicione este log
+        access_token = str(refresh.access_token)
+        refresh_token = str(refresh)
+        
+        # Salvar o token no banco
+        user_token, created = UserToken.objects.update_or_create(
+            user=user,
+            defaults={'access_token': access_token, 'refresh_token': refresh_token}
+        )
+        
+        # Serializar o usuário
         usuario = Usuario.objects.get(user=user)
         serializer = UsuarioSerializer(usuario)
-        return Response({
-            'token': str(refresh.access_token),
-            'refresh': str(refresh),
-            'user': serializer.data
+        print("Tipo de usuário retornado:", serializer.data.get('user_type'))
+        
+        # Gerar um session ID único
+        session_id = str(uuid.uuid4())
+        
+        # Configurar cookie HTTP-only com o session ID
+        response = Response({
+            'user': serializer.data,
+            'session_id': session_id  # Retornado apenas para depuração, pode ser removido
         }, status=status.HTTP_200_OK)
-    return Response({"detail": "Credenciais inválidas"}, status=status.HTTP_401_UNAUTHORIZED)
+        response.set_cookie(
+            key='session_id',
+            value=session_id,
+            httponly=True,  # Protege contra XSS
+            secure=False,   # Use True em produção com HTTPS
+            samesite='Lax'  # Protege contra CSRF
+        )
+        
+        return response
     
+    return Response({"detail": "Credenciais inválidas"}, status=status.HTTP_401_UNAUTHORIZED)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_user_token(request):
+    session_id = request.COOKIES.get('session_id')
+    if not session_id:
+        return Response({"detail": "Sessão não encontrada"}, status=status.HTTP_401_UNAUTHORIZED)
+    
+    try:
+        # Aqui você pode adicionar uma lógica para associar session_id a um usuário no backend
+        # Por simplicidade, vamos assumir que o usuário está autenticado via Django session
+        if request.user.is_authenticated:
+            user_token = UserToken.objects.get(user=request.user)
+            usuario = Usuario.objects.get(user=request.user)
+            serializer = UsuarioSerializer(usuario)
+            return Response({
+                'user': serializer.data,
+                'access_token': user_token.access_token
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({"detail": "Usuário não autenticado"}, status=status.HTTP_401_UNAUTHORIZED)
+    except UserToken.DoesNotExist:
+        return Response({"detail": "Token não encontrado"}, status=status.HTTP_401_UNAUTHORIZED)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def logout(request):
+    session_id = request.COOKIES.get('session_id') # Obter o session_id do cookie
+    if session_id and request.user.is_authenticated:
+        UserToken.objects.filter(user=request.user).delete()
+        response = Response({"detail": "Logout bem-sucedido"}, status=status.HTTP_200_OK)
+        response.delete_cookie('session_id')
+        return response
+    return Response({"detail": "Nenhuma sessão ativa"}, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 

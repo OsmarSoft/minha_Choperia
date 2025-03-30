@@ -72,3 +72,6 @@ def media_avaliacoes(request, produto_id):
         return Response({'produto_id': produto_id, 'media': round(media, 2)})
     except Produto.DoesNotExist:
         return Response({'error': 'Produto não encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+
+

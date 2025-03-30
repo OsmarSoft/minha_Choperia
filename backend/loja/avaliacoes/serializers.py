@@ -9,3 +9,4 @@ class AvaliacaoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Avaliacao
         fields = ['id', 'usuario', 'usuario_nome', 'produto', 'produto_nome', 'rating', 'comentario', 'data', 'atualizado_em', 'slug']
+

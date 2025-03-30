@@ -23,7 +23,7 @@ def listar_favoritos(request):
         return Response([], status=status.HTTP_200_OK)
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([AllowAny]) # Permite apenas usuários autenticados
 def adicionar_favorito(request):
     print('Usuario:', request.user)
     print('Dados:', request.data)

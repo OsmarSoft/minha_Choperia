@@ -21,10 +21,6 @@ const LoginForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
-    // Limpar token antigo
-    localStorage.removeItem('token');
-    sessionStorage.removeItem('token');
     
     try {
       console.log("Tentando fazer login com:", { email, password }, "Em LoginForm.tsx");

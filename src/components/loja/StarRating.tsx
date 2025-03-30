@@ -1,4 +1,3 @@
-// src/components/loja/StarRating.tsx
 import React from 'react';
 import { Star } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -20,10 +19,11 @@ const StarRating = ({ rating, onRate, readonly = false }: StarRatingProps) => {
           className={`h-6 w-6 p-0 ${readonly ? 'cursor-default' : 'cursor-pointer'}`}
           onClick={() => !readonly && onRate?.(star)}
           disabled={readonly}
+          type="button"
         >
           <Star
             className={`h-5 w-5 ${
-              star <= rating
+              star <= Math.round(rating)
                 ? 'fill-yellow-400 text-yellow-400'
                 : 'fill-none text-gray-300'
             }`}

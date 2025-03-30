@@ -19,16 +19,26 @@ export interface User {
   updated?: string;
 }
 
-// Interface to type the Django response
+// Ajuste o tipo DjangoUserResponse para incluir email como opcional
 export interface DjangoUserResponse {
-  id: string;
-  user: string;
-  name: string;
-  user_type: string;
-  ativo: boolean;
-  slug: string;
-  is_available: boolean;
-  created: string;
-  updated: string;
+  id?: string;
+  user?: string;
+  name?: string;
+  email?: string; // Tornando email opcional, já que pode não vir em todos os endpoints
+  user_type?: string;
+  slug?: string;
   token?: string;
+  ativo?: boolean;
+  is_available?: boolean;
+  created?: string;
+  updated?: string;
+}
+
+export interface LoginResponse {
+  user: DjangoUserResponse;
+}
+
+export interface GetUserResponse {
+  user: DjangoUserResponse;
+  access_token: string;
 }

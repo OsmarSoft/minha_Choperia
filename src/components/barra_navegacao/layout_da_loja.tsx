@@ -6,8 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useFavoritos } from '@/components/loja/favoritosApi';
 import { useCarrinho } from '@/components/loja/carrinhoApi';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import CarrinhoDrawer from '@/components/loja/CarrinhoDrawer';
+import { useAvaliacoes } from '@/components/loja/avaliacoesApi'; // Importar o hook de avaliações
 
 interface LayoutDaLojaProps {
   children: ReactNode;
@@ -17,12 +16,13 @@ const LayoutDaLoja: React.FC<LayoutDaLojaProps> = ({ children }) => {
   const location = useLocation();
   const { quantidadeItens } = useCarrinho();
   const { favoritos } = useFavoritos();
+  const { avaliacoes } = useAvaliacoes(); // Adicionar o estado de avaliações
 
   const menuItems = [
     { label: 'Produtos', path: '/produtos', icon: <ShoppingBag size={20} /> },
     { label: 'Histórico', path: '/historico', icon: <Clock size={20} /> },
     { label: 'Favoritos', path: '/favoritos', icon: <Heart size={20} />, count: favoritos.length },
-    { label: 'Avaliações', path: '/avaliacoes', icon: <Star size={20} /> },
+    { label: 'Avaliações', path: '/avaliacoes', icon: <Star size={20} />, count: avaliacoes.length }, // Adicionar contagem de avaliações
   ];
 
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path);

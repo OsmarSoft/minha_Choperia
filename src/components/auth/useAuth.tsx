@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from '@/types/usuario';
 import { 
@@ -20,26 +19,38 @@ interface AuthContextType {
   register: (nome: string, email: string, password: string, userType: 'physical' | 'online') => Promise<boolean>;
   logout: () => void;
   isLoading: boolean;
-  isAuthenticated: () => boolean;
+  isAuthenticated: () => Promise<boolean>; // Atualizado para Promise<boolean>
 }
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Inicia como true para refletir o carregamento inicial
 
-  // Check if the user is already authenticated when the app loads
   useEffect(() => {
     const loadUser = async () => {
-      setIsLoading(true);
+      const token = localStorage.getItem('token');
+      console.log('AuthProvider: Token encontrado no localStorage:', token);
+      if (!token) {
+        console.log('AuthProvider: Nenhum token encontrado, usuário não autenticado.');
+        setIsLoading(false);
+        return;
+      }
+
       try {
         const currentUser = await getUserService();
+        console.log('AuthProvider: Usuário carregado do backend:', currentUser);
         if (currentUser) {
           setUser(currentUser);
+        } else {
+          console.log('AuthProvider: Nenhum usuário retornado, limpando estado.');
+          localStorage.removeItem('token');
+          setUser(null);
         }
       } catch (error) {
-        console.error("Error loading user:", error);
+        console.error('AuthProvider: Erro ao carregar usuário:', error);
+        localStorage.removeItem('token'); // Remove token inválido
+        setUser(null);
       } finally {
         setIsLoading(false);
       }
@@ -52,21 +63,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsLoading(true);
     try {
       const userData = await loginService(email, password);
+      console.log('AuthProvider: Login bem-sucedido, dados:', userData);
       if (userData.token) {
-        localStorage.setItem('token', userData.token); // Salva o token no localStorage
+        localStorage.setItem('token', userData.token);
+        setUser(userData);
+        return {
+          success: true,
+          userType: userData.userType || userData.user_type as ('physical' | 'online') || 'online',
+        };
       }
-      setUser(userData);
-      setIsLoading(false);
-      return {
-        success: true,
-        userType: userData.userType || userData.user_type as ('physical' | 'online') || 'online',
-      };
+      throw new Error('Token não retornado');
     } catch (error) {
+      console.error('AuthProvider: Erro no login:', error);
+      return { success: false };
+    } finally {
       setIsLoading(false);
-      console.error("Login error:", error);
-      return {
-        success: false,
-      };
     }
   };
 
@@ -74,19 +85,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsLoading(true);
     try {
       const userData = await registerService(name, email, password, userType);
+      console.log('AuthProvider: Registro bem-sucedido, dados:', userData);
       setUser(userData);
-      setIsLoading(false);
       return true;
     } catch (error) {
-      setIsLoading(false);
-      console.error("Register error:", error);
+      console.error('AuthProvider: Erro no registro:', error);
       return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const logout = () => {
+    console.log('AuthProvider: Executando logout, usuário antes:', user);
     logoutService();
+    localStorage.removeItem('token');
     setUser(null);
+    console.log('AuthProvider: Logout concluído');
   };
 
   return (
@@ -110,5 +125,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
-

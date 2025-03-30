@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { ProdutoFavorito } from '@/types/tipo';
 import { carregarFavoritos, adicionarFavorito as adicionarFavoritoApi, removeFavorito } from '@/api/loja/favoritosService';
@@ -8,7 +7,7 @@ interface FavoritosContextType {
   favoritos: ProdutoFavorito[];
   adicionarFavorito: (produto: ProdutoFavorito) => Promise<void>;
   removerFavorito: (id: string) => Promise<void>;
-  isFavorito: (id: string) => boolean;
+  isFavorito: (id: string | number) => boolean; // Aceitar number ou string
 }
 
 const FavoritosContext = createContext<FavoritosContextType | undefined>(undefined);
@@ -19,22 +18,25 @@ export const FavoritosProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   useEffect(() => {
     const fetchFavoritos = async () => {
-      // Only try to load favorites if user is logged in
+      console.log('FavoritosProvider: useEffect disparado. User:', user);
       if (user) {
         try {
+          console.log('FavoritosProvider: Carregando favoritos para o usuário:', user.email);
           const loadedFavoritos = await carregarFavoritos();
-          setFavoritos(loadedFavoritos);
+          console.log('FavoritosProvider: Favoritos carregados do backend:', loadedFavoritos);
+          setFavoritos([...loadedFavoritos]);
         } catch (error) {
-          console.error('Erro ao carregar favoritos iniciais:', error);
+          console.error('FavoritosProvider: Erro ao carregar favoritos:', error);
+          setFavoritos([]);
         }
       } else {
-        // Clear favorites if user logs out
+        console.log('FavoritosProvider: Usuário deslogado. Limpando favoritos.');
         setFavoritos([]);
       }
     };
     
     fetchFavoritos();
-  }, [user]); // Reload favorites when user changes
+  }, [user]);
 
   const adicionarFavorito = async (produto: ProdutoFavorito) => {
     if (!user) {
@@ -42,14 +44,18 @@ export const FavoritosProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
     
     try {
+      console.log('FavoritosProvider: Antes de adicionar favorito:', { produto, atuais: favoritos });
       await adicionarFavoritoApi(produto.id);
       setFavoritos(prev => {
         if (!prev.some(item => item.id === produto.id)) {
-          return [...prev, produto];
+          const novosFavoritos = [...prev, produto];
+          console.log('FavoritosProvider: Após adicionar favorito:', novosFavoritos);
+          return novosFavoritos;
         }
         return prev;
       });
     } catch (error) {
+      console.error('FavoritosProvider: Erro ao adicionar favorito:', error);
       throw error;
     }
   };
@@ -60,15 +66,24 @@ export const FavoritosProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
     
     try {
+      console.log('FavoritosProvider: Antes de remover favorito. ID:', id, 'Atuais:', favoritos);
       await removeFavorito(id);
-      setFavoritos(prev => prev.filter(item => item.id !== id));
+      setFavoritos(prev => {
+        const novosFavoritos = prev.filter(item => item.id !== id);
+        console.log('FavoritosProvider: Após remover favorito:', novosFavoritos);
+        return novosFavoritos;
+      });
     } catch (error) {
+      console.error('FavoritosProvider: Erro ao remover favorito:', error);
       throw error;
     }
   };
 
-  const isFavorito = (id: string) => {
-    return favoritos.some(item => item.id === id);
+  const isFavorito = (id: string | number) => {
+    const idAsString = String(id); // Converte o ID recebido para string
+    const favorito = favoritos.some(item => item.id === idAsString);
+    console.log('FavoritosProvider: Verificando se é favorito. ID:', id, 'Convertido para:', idAsString, 'Resultado:', favorito, 'Favoritos atuais:', favoritos);
+    return favorito;
   };
 
   return (

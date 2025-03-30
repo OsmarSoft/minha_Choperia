@@ -1,3 +1,4 @@
+// src\pages\loja\ProdutoDetalhe.tsx
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getProdutoPorSlug } from '@/api/produtos/produtoService';
@@ -10,6 +11,7 @@ import { useCarrinho } from '@/components/loja/carrinhoApi';
 import { useToast } from '@/components/ui/use-toast';
 import { Heart, ShoppingCart, ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
+import ProdutoAvaliacao from '@/components/loja/ProdutoAvaliacao';
 
 const ProdutoDetalhe = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -151,7 +153,7 @@ const ProdutoDetalhe = () => {
         Voltar
       </Button>
       
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden mb-8">
         <CardContent className="p-0">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <motion.div 
@@ -262,8 +264,12 @@ const ProdutoDetalhe = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Componente de Avaliação do Produto */}
+      {produto && <ProdutoAvaliacao produtoId={produto.id} />}
     </div>
   );
 };
 
 export default ProdutoDetalhe;
+

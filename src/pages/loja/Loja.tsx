@@ -101,6 +101,10 @@ const Loja = () => {
     }
   };
 
+  useEffect(() => {
+    console.log('Loja.tsx: Favoritos atuais:', favoritos);
+  }, [favoritos]);
+
   const irParaHistorico = () => navigate('/historico');
 
   return (

@@ -19,6 +19,8 @@ const Favoritos = () => {
     setIsLoading(false); // Carregamento já é feito no provider
   }, [favoritos]);
 
+  console.log("Favoritos:", favoritos);
+  
   const handleRemoverFavorito = async (id: string, nome: string) => {
     try {
       await removerFavorito(id);

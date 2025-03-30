@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import { API_URL } from '@/config/api';
 import { ProdutoFavorito } from '@/types/tipo';
@@ -14,19 +13,24 @@ interface FavoritoResponse {
 
 const api = axios.create({
   baseURL: API_URL,
+  withCredentials: true,
 });
 
-// Add token to request headers
+// Usar o mesmo interceptor já configurado em usuarioService.ts
+// Ou adicionar um específico, mas evitar duplicação
 api.interceptors.request.use((config) => {
   const token = getToken();
   if (token) {
+    console.log(`Adicionando token ao header para favoritos ${config.url}: Bearer ${token}`);
     config.headers.Authorization = `Bearer ${token}`;
+  } else {
+    console.log(`Nenhum token disponível para favoritos ${config.url}`);
   }
   return config;
 });
 
 export const carregarFavoritos = async (): Promise<ProdutoFavorito[]> => {
-  try {    
+  try {
     const response = await api.get<FavoritoResponse[]>('/favoritos/');
     return response.data.map((item) => ({
       id: item.produto.toString(),
@@ -36,46 +40,29 @@ export const carregarFavoritos = async (): Promise<ProdutoFavorito[]> => {
       descricao: item.descricao || undefined,
     }));
   } catch (error: any) {
-    console.error('Erro ao carregar favoritos:', {
-      message: error.message,
-      status: error.response?.status,
-      data: error.response?.data,
-    });
-    
-    // Return empty array instead of throwing if user is not authenticated
-    if (error.response?.status === 403) {
-      console.log('Acesso não autorizado aos favoritos, retornando lista vazia');
+    console.error('Erro ao carregar favoritos:', error.response?.data);
+    if (error.response?.status === 401 || error.response?.status === 403) {
       return [];
     }
-    
     throw error;
   }
 };
 
 export const adicionarFavorito = async (produtoId: string): Promise<void> => {
-  try {    
+  try {
     await api.post('/favoritos/adicionar/', { produto_id: produtoId });
+    console.log(`Favorito ${produtoId} adicionado com sucesso`);
   } catch (error: any) {
-    console.error('Erro ao adicionar favorito:', {
-      message: error.message,
-      status: error.response?.status,
-      data: error.response?.data,
-    });
+    console.error('Erro ao adicionar favorito:', error.response?.data);
     throw error;
   }
 };
 
 export const removeFavorito = async (produtoId: string): Promise<void> => {
-  try {      
+  try {
     await api.delete(`/favoritos/remover/${produtoId}/`);
   } catch (error: any) {
-    console.error('Erro ao remover favorito:', {
-      message: error.message,
-      status: error.response?.status,
-      data: error.response?.data,
-    });
+    console.error('Erro ao remover favorito:', error.response?.data);
     throw error;
   }
 };
-
-
