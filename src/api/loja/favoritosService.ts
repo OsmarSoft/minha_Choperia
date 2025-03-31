@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { API_URL } from '@/config/api';
 import { ProdutoFavorito } from '@/types/tipo';
-import { getToken } from '@/api/usuarios/usuarioService';
 
 interface FavoritoResponse {
   produto: number;
@@ -13,25 +12,12 @@ interface FavoritoResponse {
 
 const api = axios.create({
   baseURL: API_URL,
-  withCredentials: true,
 });
 
-// Usar o mesmo interceptor já configurado em usuarioService.ts
-// Ou adicionar um específico, mas evitar duplicação
-api.interceptors.request.use((config) => {
-  const token = getToken();
-  if (token) {
-    console.log(`Adicionando token ao header para favoritos ${config.url}: Bearer ${token}`);
-    config.headers.Authorization = `Bearer ${token}`;
-  } else {
-    console.log(`Nenhum token disponível para favoritos ${config.url}`);
-  }
-  return config;
-});
-
-export const carregarFavoritos = async (): Promise<ProdutoFavorito[]> => {
+export const carregarFavoritos = async (userId: string): Promise<ProdutoFavorito[]> => {
   try {
-    const response = await api.get<FavoritoResponse[]>('/favoritos/');
+    console.log('favoritosService: Carregando favoritos para userId:', userId);
+    const response = await api.get<FavoritoResponse[]>(`/favoritos/?user_id=${userId}`);
     return response.data.map((item) => ({
       id: item.produto.toString(),
       nome: item.produto_nome,
@@ -40,29 +26,34 @@ export const carregarFavoritos = async (): Promise<ProdutoFavorito[]> => {
       descricao: item.descricao || undefined,
     }));
   } catch (error: any) {
-    console.error('Erro ao carregar favoritos:', error.response?.data);
-    if (error.response?.status === 401 || error.response?.status === 403) {
-      return [];
-    }
+    console.error('favoritosService: Erro ao carregar favoritos:', error.response?.data || error.message);
     throw error;
   }
 };
 
-export const adicionarFavorito = async (produtoId: string): Promise<void> => {
+export const adicionarFavorito = async (produtoId: string, userId: string): Promise<void> => {
   try {
-    await api.post('/favoritos/adicionar/', { produto_id: produtoId });
-    console.log(`Favorito ${produtoId} adicionado com sucesso`);
+    console.log('favoritosService: Adicionando favorito:', { produtoId, userId });
+    await api.post('/favoritos/adicionar/', { 
+      produto_id: produtoId, 
+      user_id: userId 
+    });
+    console.log(`favoritosService: Favorito ${produtoId} adicionado com sucesso para o usuário ${userId}`);
   } catch (error: any) {
-    console.error('Erro ao adicionar favorito:', error.response?.data);
+    console.error('favoritosService: Erro ao adicionar favorito:', error.response?.data || error.message);
     throw error;
   }
 };
 
-export const removeFavorito = async (produtoId: string): Promise<void> => {
+export const removeFavorito = async (produtoId: string, userId: string): Promise<void> => {
   try {
-    await api.delete(`/favoritos/remover/${produtoId}/`);
+    console.log('favoritosService: Removendo favorito:', { produtoId, userId });
+    await api.delete(`/favoritos/remover/${produtoId}/`, {
+      params: { user_id: userId }
+    });
+    console.log(`favoritosService: Favorito ${produtoId} removido com sucesso para o usuário ${userId}`);
   } catch (error: any) {
-    console.error('Erro ao remover favorito:', error.response?.data);
+    console.error('favoritosService: Erro ao remover favorito:', error.response?.data || error.message);
     throw error;
   }
 };

@@ -84,7 +84,6 @@ def criar_pedido(request):
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 @api_view(['GET'])
-@permission_classes([AllowAny])  # Temporarily allow any user to access this endpoint
 def historico_pedidos(request):
     print("Acessando historico_pedidos")  # Log para depuração
     pedidos = Pedido.objects.filter(usuario=request.user).order_by('-data')
@@ -119,7 +118,6 @@ def confirmar_recebimento(request, slug):
         return Response({'error': 'Pedido não encontrado'}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['POST'])
-@permission_classes([AllowAny])  # Allow anonymous access for cart orders
 def criar_pedido_from_carrinho(request, carrinhoSlug):
     try:
         carrinho = Carrinho.objects.get(slug=carrinhoSlug)

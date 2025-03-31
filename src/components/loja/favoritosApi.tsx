@@ -7,7 +7,7 @@ interface FavoritosContextType {
   favoritos: ProdutoFavorito[];
   adicionarFavorito: (produto: ProdutoFavorito) => Promise<void>;
   removerFavorito: (id: string) => Promise<void>;
-  isFavorito: (id: string | number) => boolean; // Aceitar number ou string
+  isFavorito: (id: string | number) => boolean;
 }
 
 const FavoritosContext = createContext<FavoritosContextType | undefined>(undefined);
@@ -17,43 +17,37 @@ export const FavoritosProvider: React.FC<{ children: ReactNode }> = ({ children 
   const { user } = useAuth();
 
   useEffect(() => {
-    const fetchFavoritos = async () => {
-      console.log('FavoritosProvider: useEffect disparado. User:', user);
-      if (user) {
+    console.log('FavoritosProvider: useEffect disparado. User:', user);
+    if (user && user.id) {
+      const fetchFavoritos = async () => {
         try {
-          console.log('FavoritosProvider: Carregando favoritos para o usuário:', user.email);
-          const loadedFavoritos = await carregarFavoritos();
-          console.log('FavoritosProvider: Favoritos carregados do backend:', loadedFavoritos);
-          setFavoritos([...loadedFavoritos]);
+          const favoritosCarregados = await carregarFavoritos(user.id);
+          console.log('FavoritosProvider: Carregando favoritos para o usuário (ID):', user.id);
+          setFavoritos(favoritosCarregados);
         } catch (error) {
           console.error('FavoritosProvider: Erro ao carregar favoritos:', error);
           setFavoritos([]);
         }
-      } else {
-        console.log('FavoritosProvider: Usuário deslogado. Limpando favoritos.');
-        setFavoritos([]);
-      }
-    };
-    
-    fetchFavoritos();
+      };
+      fetchFavoritos();
+    } else {
+      console.log('FavoritosProvider: Usuário deslogado ou inválido. Limpando favoritos.');
+      setFavoritos([]);
+    }
   }, [user]);
 
   const adicionarFavorito = async (produto: ProdutoFavorito) => {
-    if (!user) {
+    if (!user || !user.id) {
+      console.log('FavoritosProvider: Usuário não logado ou inválido, não pode adicionar favorito.');
       throw new Error('Você precisa estar logado para adicionar favoritos');
     }
-    
+
     try {
       console.log('FavoritosProvider: Antes de adicionar favorito:', { produto, atuais: favoritos });
-      await adicionarFavoritoApi(produto.id);
-      setFavoritos(prev => {
-        if (!prev.some(item => item.id === produto.id)) {
-          const novosFavoritos = [...prev, produto];
-          console.log('FavoritosProvider: Após adicionar favorito:', novosFavoritos);
-          return novosFavoritos;
-        }
-        return prev;
-      });
+      await adicionarFavoritoApi(produto.id, user.id); // Pass user.id
+      const novosFavoritos = await carregarFavoritos(user.id); // Reload from backend
+      setFavoritos(novosFavoritos);
+      console.log('FavoritosProvider: Favorito adicionado com sucesso:', novosFavoritos);
     } catch (error) {
       console.error('FavoritosProvider: Erro ao adicionar favorito:', error);
       throw error;
@@ -61,18 +55,17 @@ export const FavoritosProvider: React.FC<{ children: ReactNode }> = ({ children 
   };
 
   const removerFavorito = async (id: string) => {
-    if (!user) {
+    if (!user || !user.id) {
+      console.log('FavoritosProvider: Usuário não logado ou inválido, não pode remover favorito.');
       throw new Error('Você precisa estar logado para remover favoritos');
     }
-    
+
     try {
       console.log('FavoritosProvider: Antes de remover favorito. ID:', id, 'Atuais:', favoritos);
-      await removeFavorito(id);
-      setFavoritos(prev => {
-        const novosFavoritos = prev.filter(item => item.id !== id);
-        console.log('FavoritosProvider: Após remover favorito:', novosFavoritos);
-        return novosFavoritos;
-      });
+      await removeFavorito(id, user.id); // Pass user.id
+      const novosFavoritos = await carregarFavoritos(user.id); // Reload from backend
+      setFavoritos(novosFavoritos);
+      console.log('FavoritosProvider: Favorito removido com sucesso:', novosFavoritos);
     } catch (error) {
       console.error('FavoritosProvider: Erro ao remover favorito:', error);
       throw error;
@@ -80,9 +73,8 @@ export const FavoritosProvider: React.FC<{ children: ReactNode }> = ({ children 
   };
 
   const isFavorito = (id: string | number) => {
-    const idAsString = String(id); // Converte o ID recebido para string
+    const idAsString = String(id);
     const favorito = favoritos.some(item => item.id === idAsString);
-    console.log('FavoritosProvider: Verificando se é favorito. ID:', id, 'Convertido para:', idAsString, 'Resultado:', favorito, 'Favoritos atuais:', favoritos);
     return favorito;
   };
 

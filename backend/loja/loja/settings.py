@@ -92,24 +92,34 @@ WSGI_APPLICATION = 'loja.wsgi.application'
 
 CORS_ALLOWED_ORIGINS = [
     # depende de como o vite.config.ts foi configurado
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://localhost:3000",  # Adiciona React rodando na porta padrão
-    "http://127.0.0.1:3000",
     "http://localhost:8080",
-    "http://localhost:8000",
     "http://127.0.0.1:8080",
-    "http://127.0.0.1:8000",
-    "http://localhost:8004",
-    "http://127.0.0.1:8004",
 ]
 
 
 CORS_ALLOW_CREDENTIALS = True #permite envio de cookies
 CORS_ALLOWED_ORIGINS = ["http://localhost:8080"]  # Ajuste para seu frontend
 CORS_ALLOW_HEADERS = [
-    'Authorization',
-    'Content-Type',
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'email',  # Add 'email' to allow this header
+    "password",  # Add 'password' to allow this header
+]
+
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
 ]
 
 REST_FRAMEWORK = {
@@ -120,8 +130,20 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-        
     ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+}
+
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),  # Short-lived access token
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),     # Longer-lived refresh token
+    'ROTATE_REFRESH_TOKENS': True,                   # Gera um novo refresh token ao atualizar
+    'BLACKLIST_AFTER_ROTATION': True,                # Coloca o refresh token antigo na lista negra
+    'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
 

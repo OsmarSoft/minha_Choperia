@@ -1,12 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { User } from '@/types/usuario';
-import { 
-  login as loginService, 
-  register as registerService,
-  logout as logoutService,
-  getUser as getUserService,
-  isAuthenticated
-} from '@/api/usuarios/usuarioService';
 
 interface LoginResult {
   success: boolean;
@@ -19,60 +12,27 @@ interface AuthContextType {
   register: (nome: string, email: string, password: string, userType: 'physical' | 'online') => Promise<boolean>;
   logout: () => void;
   isLoading: boolean;
-  isAuthenticated: () => Promise<boolean>; // Atualizado para Promise<boolean>
 }
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true); // Inicia como true para refletir o carregamento inicial
-
-  useEffect(() => {
-    const loadUser = async () => {
-      const token = localStorage.getItem('token');
-      console.log('AuthProvider: Token encontrado no localStorage:', token);
-      if (!token) {
-        console.log('AuthProvider: Nenhum token encontrado, usuário não autenticado.');
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const currentUser = await getUserService();
-        console.log('AuthProvider: Usuário carregado do backend:', currentUser);
-        if (currentUser) {
-          setUser(currentUser);
-        } else {
-          console.log('AuthProvider: Nenhum usuário retornado, limpando estado.');
-          localStorage.removeItem('token');
-          setUser(null);
-        }
-      } catch (error) {
-        console.error('AuthProvider: Erro ao carregar usuário:', error);
-        localStorage.removeItem('token'); // Remove token inválido
-        setUser(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    loadUser();
-  }, []);
+  const [isLoading, setIsLoading] = useState(false);
 
   const login = async (email: string, password: string): Promise<LoginResult> => {
     setIsLoading(true);
     try {
-      const userData = await loginService(email, password);
+      const userData: User = {
+        id: '1',
+        name: 'Usuário Exemplo',
+        email,
+        userType: 'online',
+        slug: 'usuario-exemplo',
+      };
       console.log('AuthProvider: Login bem-sucedido, dados:', userData);
-      if (userData.token) {
-        localStorage.setItem('token', userData.token);
-        setUser(userData);
-        return {
-          success: true,
-          userType: userData.userType || userData.user_type as ('physical' | 'online') || 'online',
-        };
-      }
-      throw new Error('Token não retornado');
+      setUser(userData);
+      return { success: true, userType: userData.userType };
     } catch (error) {
       console.error('AuthProvider: Erro no login:', error);
       return { success: false };
@@ -84,7 +44,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const register = async (name: string, email: string, password: string, userType: 'physical' | 'online'): Promise<boolean> => {
     setIsLoading(true);
     try {
-      const userData = await registerService(name, email, password, userType);
+      const userData: User = {
+        id: '2',
+        name,
+        email,
+        userType,
+        slug: name.toLowerCase().replace(/\s+/g, '-'),
+      };
       console.log('AuthProvider: Registro bem-sucedido, dados:', userData);
       setUser(userData);
       return true;
@@ -98,8 +64,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = () => {
     console.log('AuthProvider: Executando logout, usuário antes:', user);
-    logoutService();
-    localStorage.removeItem('token');
     setUser(null);
     console.log('AuthProvider: Logout concluído');
   };
@@ -111,7 +75,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       register, 
       logout, 
       isLoading,
-      isAuthenticated: () => isAuthenticated() 
     }}>
       {children}
     </AuthContext.Provider>

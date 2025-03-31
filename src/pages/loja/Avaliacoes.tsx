@@ -1,4 +1,3 @@
-// src/pages/loja/Avaliacoes.tsx
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -40,7 +39,7 @@ const StarRating = ({ rating, onChange }: { rating: number; onChange?: (rating: 
 };
 
 const Avaliacoes = () => {
-  const { avaliacoes, getAvaliacoesUsuario, editarAvaliacao, removerAvaliacao } = useAvaliacoes();
+  const { getAvaliacoesUsuario, editarAvaliacao, removerAvaliacao } = useAvaliacoes();
   const { toast } = useToast();
   const [minhasAvaliacoes, setMinhasAvaliacoes] = useState<Avaliacao[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -48,26 +47,31 @@ const Avaliacoes = () => {
   const [novoComentario, setNovoComentario] = useState('');
   const [novaAvaliacao, setNovaAvaliacao] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const fetchAvaliacoes = async () => {
+    setIsLoading(true);
+    try {
+      const avaliacoesUsuario = await getAvaliacoesUsuario(email, password);
+      setMinhasAvaliacoes(avaliacoesUsuario);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao carregar avaliações",
+        description: "Não foi possível carregar suas avaliações.",
+        duration: 2000,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchAvaliacoes = async () => {
-      setIsLoading(true);
-      try {
-        const avaliacoesUsuario = await getAvaliacoesUsuario();
-        setMinhasAvaliacoes(avaliacoesUsuario);
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Erro ao carregar avaliações",
-          description: "Não foi possível carregar suas avaliações.",
-          duration: 2000,
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchAvaliacoes();
-  }, [getAvaliacoesUsuario, toast]);
+    if (email && password) {
+      fetchAvaliacoes();
+    }
+  }, [email, password]);
 
   const handleEditarClick = (avaliacao: Avaliacao) => {
     setAvaliacaoAtual(avaliacao);
@@ -79,18 +83,12 @@ const Avaliacoes = () => {
   const handleRemoverAvaliacao = async (id: string) => {
     setIsLoading(true);
     try {
-      await removerAvaliacao(id);
-      const updatedAvaliacoes = await getAvaliacoesUsuario();
-      setMinhasAvaliacoes(updatedAvaliacoes);
+      await removerAvaliacao(email, password, id);
+      await fetchAvaliacoes();
       toast({
         title: "Avaliação removida",
         description: "Sua avaliação foi removida com sucesso.",
         duration: 2000,
-        action: (
-          <div className="w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700 mt-2">
-            <div className="bg-green-600 h-1.5 rounded-full animate-[progress_2s_ease-in-out]"></div>
-          </div>
-        ),
       });
     } catch (error: any) {
       toast({
@@ -108,19 +106,13 @@ const Avaliacoes = () => {
     if (!avaliacaoAtual) return;
     setIsLoading(true);
     try {
-      await editarAvaliacao(avaliacaoAtual.id, novaAvaliacao, novoComentario);
-      const updatedAvaliacoes = await getAvaliacoesUsuario();
-      setMinhasAvaliacoes(updatedAvaliacoes);
+      await editarAvaliacao(email, password, avaliacaoAtual.id, novaAvaliacao, novoComentario);
+      await fetchAvaliacoes();
       setIsDialogOpen(false);
       toast({
         title: "Avaliação atualizada",
         description: "Sua avaliação foi atualizada com sucesso.",
         duration: 2000,
-        action: (
-          <div className="w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700 mt-2">
-            <div className="bg-green-600 h-1.5 rounded-full animate-[progress_2s_ease-in-out]"></div>
-          </div>
-        ),
       });
     } catch (error: any) {
       toast({
@@ -147,9 +139,27 @@ const Avaliacoes = () => {
       <h1 className="text-2xl font-bold text-brewery-dark-brown mb-6">
         Minhas Avaliações
       </h1>
-      
-      {isLoading ? (
-        <motion.div 
+
+      {!email || !password ? (
+        <div className="mb-6">
+          <input
+            type="email"
+            placeholder="Digite seu email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="border p-2 rounded w-full mb-4"
+          />
+          <input
+            type="password"
+            placeholder="Digite sua senha"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="border p-2 rounded w-full mb-4"
+          />
+          <Button onClick={fetchAvaliacoes}>Carregar Avaliações</Button>
+        </div>
+      ) : isLoading ? (
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="text-center p-8"
@@ -157,7 +167,7 @@ const Avaliacoes = () => {
           <p className="text-gray-600">Carregando avaliações...</p>
         </motion.div>
       ) : minhasAvaliacoes.length === 0 ? (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -193,18 +203,18 @@ const Avaliacoes = () => {
                   <p className="text-gray-700">{avaliacao.comentario}</p>
                 </CardContent>
                 <CardFooter className="flex justify-end space-x-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => handleEditarClick(avaliacao)}
                     disabled={isLoading}
                   >
                     <Pencil className="h-4 w-4 mr-2" />
                     Editar
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => handleRemoverAvaliacao(avaliacao.id)}
                     disabled={isLoading}
                   >
@@ -217,7 +227,7 @@ const Avaliacoes = () => {
           ))}
         </div>
       )}
-      
+
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -239,17 +249,14 @@ const Avaliacoes = () => {
             />
           </div>
           <DialogFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setIsDialogOpen(false)}
               disabled={isLoading}
             >
               Cancelar
             </Button>
-            <Button 
-              onClick={handleSalvarEdicao}
-              disabled={isLoading}
-            >
+            <Button onClick={handleSalvarEdicao} disabled={isLoading}>
               {isLoading ? "Salvando..." : "Salvar Alterações"}
             </Button>
           </DialogFooter>

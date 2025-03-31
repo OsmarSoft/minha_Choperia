@@ -54,11 +54,13 @@ export interface PedidoItem {
   nome: string;
   quantidade: number;
   precoUnitario: number;
+  preco_unitario?: string;
   total: number;
   slug: string;
   empresaId?: string;
   venda?: number;
   preco?: number;
+  produto_nome?: string;
 }
 
 

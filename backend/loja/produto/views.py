@@ -1,13 +1,16 @@
 # backend\loja\produto\views.py
 from django.shortcuts import render
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from django.db.models import Q
 from .models import Produto
 from .serializers import ProdutoSerializer
+from rest_framework.permissions import AllowAny
 
 @api_view(['GET'])
+@permission_classes([AllowAny])  # Permite acesso sem autenticação
 def search_produtos(request):
     query = request.query_params.get("search", "")
 
@@ -24,6 +27,7 @@ def search_produtos(request):
 
 
 @api_view(["GET", "POST"])
+@permission_classes([IsAuthenticated])  # Exige autenticação
 def produtos(request):
     if request.method == "GET":
         produtos = Produto.objects.all()
@@ -38,6 +42,7 @@ def produtos(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET', 'PUT', 'DELETE'])
+@permission_classes([IsAuthenticated])  # Exige autenticação
 def produto_detail(request, slug):
     try:
         produto = Produto.objects.get(slug=slug)
@@ -60,6 +65,7 @@ def produto_detail(request, slug):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 @api_view(['GET'])
+@permission_classes([AllowAny])  # Permite acesso sem autenticação
 def produto_por_id(request, id):
     print('Chamei produto_por_id na views produto:', id)
     try:
@@ -81,6 +87,7 @@ def decrementar_estoque(request, slug):
         return Response({'status': 'error', 'message': 'Produto não encontrado'}, status=404)
 
 @api_view(['POST'])
+
 def incrementar_estoque(request, slug):
     try:
         produto = Produto.objects.get(slug=slug)

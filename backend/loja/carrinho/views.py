@@ -66,7 +66,6 @@ def carrinho_detail(request, slug):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
 def adicionar_item_carrinho(request, slug):
     """Adiciona um item ao carrinho e atualiza o estoque."""
     print(f'🚀 Tentando adicionar item ao carrinho com slug: {slug}')

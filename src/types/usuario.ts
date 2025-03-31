@@ -1,4 +1,3 @@
-
 export type UserType = "physical" | "online";
 
 export interface User {
@@ -10,7 +9,6 @@ export interface User {
   address?: string;
   password?: string; // Only used internally, not exposed to components
   slug: string;
-  token?: string; // Add token for authentication
   user?: string; // Reference to Django User model
   user_type?: string; // Backend uses user_type instead of userType
   ativo?: boolean;
@@ -27,7 +25,6 @@ export interface DjangoUserResponse {
   email?: string; // Tornando email opcional, já que pode não vir em todos os endpoints
   user_type?: string;
   slug?: string;
-  token?: string;
   ativo?: boolean;
   is_available?: boolean;
   created?: string;
@@ -39,6 +36,15 @@ export interface LoginResponse {
 }
 
 export interface GetUserResponse {
-  user: DjangoUserResponse;
-  access_token: string;
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    user_type: UserType;
+    slug: string;
+    ativo: boolean;
+    is_available: boolean;
+    created: string;
+    updated: string;
+  };
 }

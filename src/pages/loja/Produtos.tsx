@@ -48,7 +48,7 @@ const Produtos = () => {
   useEffect(() => {
     console.log('Produtos.tsx: Favoritos atualizados:', favoritos);
     produtos.forEach(produto => {
-      console.log('Produtos.tsx: Verificando favorito no useEffect. ID:', produto.id, 'É favorito?', isFavorito(produto.id));
+      // console.log('Produtos.tsx: Verificando favorito no useEffect. ID:', produto.id, 'É favorito?', isFavorito(produto.id));
     });
   }, [favoritos, produtos]);
 
@@ -153,7 +153,7 @@ const Produtos = () => {
           {produtos.map((produto) => {
             const favorito = isFavorito(produto.id);
             const media = mediasAvaliacoes[produto.id] || 0;
-            console.log('Produtos.tsx: Renderizando card. ID:', produto.id, 'É favorito?', favorito, 'Média:', media);
+            // console.log('Produtos.tsx: Renderizando card. ID:', produto.id, 'É favorito?', favorito, 'Média:', media);
             return (
               <Card key={produto.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                 {produto.imagem && (

@@ -1,7 +1,6 @@
 
 // src/components/loja/avaliacoesApi.tsx
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useAuth } from '@/components/auth/useAuth';
 import { 
   carregarAvaliacoes, 
   adicionarAvaliacao as adicionarAvaliacaoApi,
@@ -14,11 +13,11 @@ import { Avaliacao } from '@/types/tipo';
 
 interface AvaliacoesContextType {
   avaliacoes: Avaliacao[];
-  adicionarAvaliacao: (produtoId: string, rating: number, comentario: string) => Promise<void>;
-  editarAvaliacao: (avaliacaoId: string, rating: number, comentario: string) => Promise<void>;
-  removerAvaliacao: (avaliacaoId: string) => Promise<void>;
+  adicionarAvaliacao: (email: string, password: string, produtoId: string, rating: number, comentario: string) => Promise<void>;
+  editarAvaliacao: (email: string, password: string, avaliacaoId: string, rating: number, comentario: string) => Promise<void>;
+  removerAvaliacao: (email: string, password: string, avaliacaoId: string) => Promise<void>;
   getAvaliacoesProduto: (produtoId: string) => Promise<Avaliacao[]>;
-  getAvaliacoesUsuario: () => Promise<Avaliacao[]>;
+  getAvaliacoesUsuario: (email: string, password: string) => Promise<Avaliacao[]>;
   getMediaAvaliacoes: (produtoId: string) => Promise<number>;
 }
 
@@ -26,57 +25,47 @@ const AvaliacoesContext = createContext<AvaliacoesContextType | undefined>(undef
 
 export const AvaliacoesProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [avaliacoes, setAvaliacoes] = useState<Avaliacao[]>([]);
-  const { user } = useAuth();
 
-  useEffect(() => {
-    const fetchAvaliacoes = async () => {
-      if (user) {
-        try {
-          const avaliacoesUsuario = await carregarAvaliacoes();
-          setAvaliacoes(avaliacoesUsuario);
-        } catch (error) {
-          console.error('Erro ao carregar avaliações:', error);
-        }
-      } else {
-        // Clear ratings when user logs out
-        setAvaliacoes([]);
-      }
-    };
-    
-    fetchAvaliacoes();
-  }, [user]);
-
-  const adicionarAvaliacao = async (produtoId: string, rating: number, comentario: string) => {
-    if (!user) throw new Error('Usuário não autenticado');
+  const getAvaliacoesUsuario = async (email: string, password: string): Promise<Avaliacao[]> => {
     try {
-      await adicionarAvaliacaoApi(produtoId, rating, comentario);
-      const updatedAvaliacoes = await carregarAvaliacoes();
+      const avaliacoesUsuario = await carregarAvaliacoes(email, password);
+      setAvaliacoes(avaliacoesUsuario);
+      return avaliacoesUsuario;
+    } catch (error) {
+      console.error('Erro ao carregar avaliações do usuário:', error);
+      return [];
+    }
+  };
+
+  const adicionarAvaliacao = async (email: string, password: string, produtoId: string, rating: number, comentario: string) => {
+    try {
+      await adicionarAvaliacaoApi(email, password, produtoId, rating, comentario);
+      const updatedAvaliacoes = await carregarAvaliacoes(email, password);
       setAvaliacoes(updatedAvaliacoes);
     } catch (error) {
+      console.error('Erro ao adicionar avaliação:', error);
       throw error;
     }
   };
 
-  const editarAvaliacao = async (avaliacaoId: string, rating: number, comentario: string) => {
+  const editarAvaliacao = async (email: string, password: string, avaliacaoId: string, rating: number, comentario: string) => {
     try {
-      const avaliacao = avaliacoes.find(a => a.id === avaliacaoId);
-      if (!avaliacao) throw new Error('Avaliação não encontrada');
-      await editarAvaliacaoApi(avaliacao.slug, rating, comentario);
-      const updatedAvaliacoes = await carregarAvaliacoes();
+      await editarAvaliacaoApi(email, password, avaliacaoId, rating, comentario);
+      const updatedAvaliacoes = await carregarAvaliacoes(email, password);
       setAvaliacoes(updatedAvaliacoes);
     } catch (error) {
+      console.error('Erro ao editar avaliação:', error);
       throw error;
     }
   };
 
-  const removerAvaliacao = async (avaliacaoId: string) => {
+  const removerAvaliacao = async (email: string, password: string, avaliacaoId: string) => {
     try {
-      const avaliacao = avaliacoes.find(a => a.id === avaliacaoId);
-      if (!avaliacao) throw new Error('Avaliação não encontrada');
-      await removerAvaliacaoApi(avaliacao.slug);
-      const updatedAvaliacoes = await carregarAvaliacoes();
+      await removerAvaliacaoApi(email, password, avaliacaoId);
+      const updatedAvaliacoes = await carregarAvaliacoes(email, password);
       setAvaliacoes(updatedAvaliacoes);
     } catch (error) {
+      console.error('Erro ao remover avaliação:', error);
       throw error;
     }
   };
@@ -86,16 +75,6 @@ export const AvaliacoesProvider: React.FC<{ children: ReactNode }> = ({ children
       return await carregarAvaliacoesProduto(produtoId);
     } catch (error) {
       console.error('Erro ao carregar avaliações do produto:', error);
-      return [];
-    }
-  };
-
-  const getAvaliacoesUsuario = async (): Promise<Avaliacao[]> => {
-    if (!user) return [];
-    try {
-      return await carregarAvaliacoes();
-    } catch (error) {
-      console.error('Erro ao carregar avaliações do usuário:', error);
       return [];
     }
   };
@@ -131,3 +110,5 @@ export const useAvaliacoes = () => {
   }
   return context;
 };
+
+
